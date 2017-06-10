@@ -146,67 +146,14 @@ DEMO
 
 	In the main function of the program are four demos
 
-	
-	About 92% (+- 5%) on the Balance Data 
-	About 99% (+- 1%) on the Mushroom Data
-	About 90% (+- 6%) on Ionosphere Data
-	About 98.5% (+- 0.5%) on MNIST
-
 
 
 FURTHER STUDY
 
-I want to expand this code to feature hyperparameter optimization as well as add 
-tensorboard support and model saver support that I added to the convolutional network 
-code.
+	I want to expand this code to feature hyperparameter optimization as well as add 
+	tensorboard support and model saver support that I added to the convolutional network 
+	code.
 
-I still have a lot of models to try to code, I'm rather interested in 
-generative adversarial models, want to try and use one to "dream" music, trained off a
-few of my favorite artists.
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
+	I still have a lot of models to try to code, I'm rather interested in 
+	generative adversarial models, want to try and use one to "dream" music, trained off a
+	few of my favorite artists.
