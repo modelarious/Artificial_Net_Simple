@@ -168,7 +168,7 @@ def MNIST_Data_Get():
     
 def generate_Random_Samples(num, IN_X, IN_Y, overlap=False):
     total_samples = IN_X.shape[0]
-    testingNum = int(total_samples*0.3)
+    testingNum = int(total_samples*0.1)
     
     #fix divide by 0 errors
     if testingNum == 0:
@@ -296,7 +296,7 @@ def one_Hot(IN):
     return OUT
 
 def Quad_obj(fcShape, output_layer, weights, biases):
-    
+    keep_prob = tf.placeholder(tf.float32)
     # additional variables for the quadratic function
     second_degree_weights = instantiate_weights(fcShape) 
     
@@ -305,11 +305,6 @@ def Quad_obj(fcShape, output_layer, weights, biases):
        
         if i == (fcShape.size - 2):
             #last layer
-            
-            #configurable dropout
-            keep_prob = tf.placeholder(tf.float32)
-            output_layer = tf.nn.dropout(output_layer, keep_prob)
-            
             first_term = tf.matmul(
                 tf.square(output_layer),
                 second_degree_weights[str(i)])
@@ -332,17 +327,16 @@ def Quad_obj(fcShape, output_layer, weights, biases):
             output_layer = tf.add(tf.add(first_term, second_term), 
                                   biases[str(i)]) 
             output_layer = tf.nn.softmax(output_layer) 
+            output_layer = tf.nn.dropout(output_layer, keep_prob)
     
     return OUTPUT, LOGITS, keep_prob
 
 def linear_obj(fcShape, output_layer, weights, biases):
+    keep_prob = tf.placeholder(tf.float32)
     for i in range(fcShape.size - 1):
         
         if i == (fcShape.size - 2):
             #last layer
-            keep_prob = tf.placeholder(tf.float32)
-            output_layer = tf.nn.dropout(output_layer, keep_prob)
-            
             #need to store logits at output layer
             LOGITS = tf.add(tf.matmul(output_layer, weights[str(i)]), 
                             biases[str(i)])
@@ -353,6 +347,8 @@ def linear_obj(fcShape, output_layer, weights, biases):
             output_layer = tf.add(tf.matmul(output_layer, weights[str(i)]), 
                                   biases[str(i)])
             output_layer = tf.nn.softmax(output_layer) 
+            output_layer = tf.nn.dropout(output_layer, keep_prob)
+            
     return OUTPUT, LOGITS, keep_prob   
 
 def add_art_layers(IN, fcShape, objFunc, silent):    
@@ -581,9 +577,9 @@ def artificial_Net(inputX, inputY, nSamples=0, initVector=np.array([0,0]),
             nSamples = total
             
         else:
-            nSamples = int(0.7*inputX.shape[0])
+            nSamples = int(0.9*inputX.shape[0])
         
-            if (int(0.7*total) + int(0.3*total)) < total:
+            if (int(0.9*total) + int(0.1*total)) < total:
                 # if the sum of 70% of the data and 30% of the data is 1 less 
                 # than the actual total (floating point error), adjust by 1
                 nSamples += 1
@@ -690,12 +686,7 @@ def artificial_Net(inputX, inputY, nSamples=0, initVector=np.array([0,0]),
     #correct the test submitted by the network
     percent_correct = check_Tests(testY, test_result)
     print("Got", str(percent_correct) + "% on the test cases.")
-    
-    # A or better?
-    if percent_correct >= strictness:
-        return "SUCCESS"
-    
-    return "Failure"
+    return IN, LABEL_IN, OUTPUT, keep_rate
 
 
 def main():
@@ -709,8 +700,10 @@ def main():
     dataFileName = 'Balance_data.csv'  
     inputX, inputY = get_Samples(dataFileName, categorical=True)
     
-    artificial_Net(inputX, inputY, initVector=[0, 35, 35, 0], 
-                   training_epochs=3000, silent=True, batchSize=20)
+    IN, LABEL_IN, OUTPUT, keep_rate = artificial_Net(inputX, inputY, 
+                                                     initVector=[0, 35, 35, 0], 
+                                                     training_epochs=300, 
+                                                     silent=True, batchSize=200)
     
     '''
     Mushrooms contains many features, all with various levels 
@@ -718,8 +711,15 @@ def main():
     '''
     dataFileName = 'Mushrooms.csv'
     inputX, inputY = get_Samples(dataFileName, categorical=True)
-    artificial_Net(inputX, inputY, initVector=[0, 33, 33, 0], 
-                   training_epochs=200, silent=True, batchSize=100)
+    #IN, LABEL_IN, OUTPUT, keep_rate = artificial_Net(inputX, inputY, 
+    #                                                 initVector=[0, 33, 33, 0], 
+    #                                                 training_epochs=200, 
+    #                                                 silent=True, batchSize=100)
+    
+    IN, LABEL_IN, OUTPUT, keep_rate = artificial_Net(inputX, inputY, 
+                                                     initVector=[0, 33, 33, 0], 
+                                                     training_epochs=200, 
+                                                     silent=True, batchSize=100)    
     
     '''
     Ionosphere contains 34 features, all continuous.  get_Samples will 
@@ -727,20 +727,22 @@ def main():
     '''
     dataFileName = 'Ionosphere.csv'
     inputX, inputY = get_Samples(dataFileName, categorical=False)
-    artificial_Net(inputX, inputY, initVector = [0, 40, 40, 0], 
-                   training_epochs=2500, silent=True,
-                   alpha=0.0005)
+    IN, LABEL_IN, OUTPUT, keep_rate = artificial_Net(inputX, inputY, 
+                                                     initVector=[0, 80, 80, 0], 
+                                                     training_epochs=5000, 
+                                                     silent=True, alpha=0.005, 
+                                                     batchSize=100)
     
     
     #mnist example
-    
+    '''
     print("\n")
     #typically scores around 98.5%
     inputX, inputY = MNIST_Data_Get()
     artificial_Net(inputX, inputY, initVector = np.array([0, 784, 0]), 
                    training_epochs=20000, batchSize=100)
     
-
+    '''
 
 
 main()
