@@ -157,3 +157,23 @@ FURTHER STUDY
 	I still have a lot of models to try to code, I'm rather interested in 
 	generative adversarial models, want to try and use one to "dream" music, trained off a
 	few of my favorite artists.
+
+to add:
+
+	DBN (need an RBM model, then stack that), (helps against the vanishing
+	gradient problem)), pretrain the RBM layers to reconstruct input as best
+	as possible by extracting features, each layer learns entire input
+
+	autoencoder
+
+	hyperparameter optimization
+	ex:
+	#http://machinelearningmastery.com/grid-search-hyperparameters-deep-learning-models-python-keras/
+	seems like the main method is to just brute force a few values for each 
+	variable and track the training... not viable for networks that take long
+	to train.
+
+	Wikipedia mentions gradient-based optimization referring to this paper
+	http://home.thep.lu.se/~mattias/publications/papers/Design_IEEE96.pdf
+	Bayesian optimization could also be done through Bayespot
+	could also try MOE as it runs in CUDA 

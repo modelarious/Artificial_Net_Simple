@@ -4,34 +4,9 @@ import numpy as np
 import random
 import sys
 
-#purpose of this project:
-#design a simple reusable api for me to be able to deploy vanilla versions of
-#variety of different types of networks
-# I suppose once I'm done here, it's going to be rather similar to 
-# the way Keras or scikitlearn have their api set up
 
 
-#to add:
-# CNN(vanilla and RESnet (helps against vanishing gradient))
 
-# RNN(vanilla, LSTM and GRU), 
-
-# DBN (need an RBM model, then stack that), (helps against the vanishing
-# gradient problem)), pretrain the RBM layers to reconstruct input as best
-# as possible by extracting features, each layer learns entire input
-
-# autoencoder
-#
-#hyperparameter optimization
-#ex:
-#http://machinelearningmastery.com/grid-search-hyperparameters-deep-learning-models-python-keras/
-# seems like the main method is to just brute force a few values for each 
-# variable and track the training... not viable for networks that take long
-# to train.
-# Wikipedia mentions gradient-based optimization referring to this paper
-#http://home.thep.lu.se/~mattias/publications/papers/Design_IEEE96.pdf
-# Bayesian optimization could also be done through Bayespot
-# could also try MOE as it runs in CUDA 
 def get_Samples(data='Balance_Data.csv', categorical=True):
     '''
     read in a csv file
@@ -348,7 +323,6 @@ def linear_obj(fcShape, output_layer, weights, biases):
                                   biases[str(i)])
             output_layer = tf.nn.softmax(output_layer) 
             output_layer = tf.nn.dropout(output_layer, keep_prob)
-            
     return OUTPUT, LOGITS, keep_prob   
 
 def add_art_layers(IN, fcShape, objFunc, silent):    
