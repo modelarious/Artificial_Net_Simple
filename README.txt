@@ -11,6 +11,7 @@ INTRO
 	Two functions required to deploy network:
 		get_Samples
 		artificial_Net
+		
 
 	
 FUNCTIONALITY
@@ -135,7 +136,9 @@ artificial_Net
 
 
 DEMO
-
+	
+	In main.py are four different demos.
+	
 	I tried four different datasets, three were retrieved from http://archive.ics.uci.edu/ml/
 	Specifically:
 		Balance Data

@@ -2,57 +2,10 @@ import tensorflow as tf
 import numpy as np
 
 from neuralFuncs import add_art_layers
+from optimizationFuncs import optimize
 from inputFuncs import get_Samples, MNIST_Data_Get, generate_Random_Samples
 from printFuncs import network_Architecture
 from errorCheck import error_Check
-
-def BATCH(to_batch_x, to_batch_y, batchSize=0):
-    
-    length = to_batch_x.shape[0]
-    # if batchSize is unspecified, or batchSize is greater than the number
-    # of samples available
-    if batchSize <= 0 or batchSize > length:
-        batchSize = int(length/10)
-        if batchSize == 0:
-            batchSize += 1
-    batch_indices = np.random.choice(length, batchSize, replace=False)
-    return to_batch_x[batch_indices], to_batch_y[batch_indices] 
-
-def one_Hot(IN):
-    '''
-    turns prediction probabilities into labels
-    
-    takes an array of n samples by m features
-    uses a zeroed out array and makes the most prominent column in each
-    row (most prominent feature in each sample) a 1.0
-    
-    If input is 
-    [[0.1, 0.9],
-     [0.4, 0.7]]
-     
-    resulting output would be 
-    [[0.0, 1.0],
-     [0.0, 1.0]]
-     
-    input:
-    [[0.1, 0.5, 0.4],
-     [0.6, 0.3, 0.1]]
-      
-    output:
-    [[0.0, 1.0, 0.0],
-     [1.0, 0.0, 0.0]]
-     
-    '''
-    # initialize array
-    OUT = np.zeros(IN.shape)
-    
-    # gather argmax of each row
-    argmaxes = np.argmax(IN, axis=1)
-    
-    # set the argmax position in the OUT array as 1.0
-    OUT[np.arange(argmaxes.size), argmaxes] = 1.0
-    
-    return OUT
 
 
 def create_Simple_Artificial_Network(layerSizes, silent=False, objFunc=''):
@@ -74,104 +27,9 @@ def create_Simple_Artificial_Network(layerSizes, silent=False, objFunc=''):
     OUTPUT, LOGITS, keepProb = add_art_layers(IN, layerSizes, objFunc, silent)
     return IN, LABEL_IN, OUTPUT, LOGITS, keepProb
     
-
-def check_Tests(A, B):
-    #could be achieved with argmaxes as well
-    if list in [type(A), type(B)]:
-        return "Instead of numpy array, received list"
     
-    if A.shape != B.shape:
-        return "Shapes of two inputs didn't match"
-    
-    percent_correct = np.mean(np.equal(A, B)) 
-    return percent_correct * 100
-
-def set_Display_Step(step):
-    rv = min(100, int(step/20))
-    if rv == 0:
-        rv += 1
-    return rv
-
-
-def optimize(IN, LABEL_IN, OUTPUT, LOGITS, keep_rate, trainX, trainY, testX, 
-             testY, batchSize=100, keepPercent=0.5, batching=True, minCost=1e-6,
-             training_epochs=20000, alpha=0.02, silent=False):
-    
-    displayStep = set_Display_Step(training_epochs)
-    
-    #calculate cost
-    cost = tf.reduce_mean(tf.nn.softmax_cross_entropy_with_logits(
-        logits=LOGITS, labels=LABEL_IN))
-    
-    #minimize cost
-    optimizer = tf.train.AdamOptimizer(alpha).minimize(cost)
-    
-    #initialize all variables and run the session
-    init = tf.global_variables_initializer()
-    sess = tf.Session()
-    sess.run(init)
-
-    #optimize
-    for i in range(training_epochs):
-        
-        # if batching is being used
-        if batching==True:
-            
-            # collect a random sample from the training data
-            sampleX, sampleY = BATCH(trainX, trainY, batchSize)
-            
-            # optimize
-            sess.run(optimizer, 
-                     feed_dict = {IN:sampleX, 
-                                  LABEL_IN:sampleY, 
-                                  keep_rate:keepPercent})
-            
-            cc = sess.run(cost, 
-                          feed_dict = {IN:sampleX, 
-                                       LABEL_IN:sampleY, 
-                                       keep_rate:1.0})            
-            
-        else:
-            # train on entire train data
-            sess.run(optimizer,
-                     feed_dict = {IN:trainX, 
-                                  LABEL_IN:trainY, 
-                                  keep_rate:keepPercent})
-            cc = sess.run(cost,
-                          feed_dict = {IN: trainX,
-                                       LABEL_IN:trainY,
-                                       keep_rate:1.0})            
-        # log training
-        if i % displayStep == 0:
-            
-            if silent == False:
-                print("Training step:", '%04d' % (i), \
-                      "cost=", "{:.9f}".format(cc))
-            
-        #if we've got a lower cost than desired
-        if cc <= minCost:
-            print("Cost is lower than minCost")
-            break
-            
-    if silent == False:         
-        print("Optimization Finished!")
-        training_cost = sess.run(cost, 
-                                 feed_dict = {IN: trainX, 
-                                              LABEL_IN:trainY, 
-                                              keep_rate:1.0})
-        print("Training cost = ", training_cost)
-    
-    #gather the answers to the testing data from the network
-    test_result = one_Hot(sess.run(OUTPUT, 
-                                   feed_dict = {IN: testX, 
-                                                keep_rate:1.0}))
-    #correct the test submitted by the network
-    percent_correct = check_Tests(testY, test_result)
-    print("Got", str(percent_correct) + "% on the test cases.")
-    return IN, LABEL_IN, OUTPUT, keep_rate    
-
 def artificial_Net(inputX, inputY, nSamples=0, initVector=np.array([0,0]), 
-                   minCost=1e-6, alpha=0.02, training_epochs=10000, strictness=90, 
+                   minCost=1e-6, alpha=0.02, training_epochs=10000, 
                    keepPercent=0.5, silent=False, overlap=False, objFunc='',
                    batchSize=50, batching=True):
     '''
@@ -183,8 +41,6 @@ def artificial_Net(inputX, inputY, nSamples=0, initVector=np.array([0,0]),
     if there are two categories, inputY should have rows that are either [0,1] or [1,0]
     
     nSamples is the number of samples to be used for training the net
-    
-    
     
     initVector is the shape of the Artificial Net
     Init Vector examples
@@ -220,8 +76,6 @@ def artificial_Net(inputX, inputY, nSamples=0, initVector=np.array([0,0]),
     training_epochs is the maximum episodes of training we are going 
     to perform, it could be less due to the minCost variable.
     
-    strictness is the test score the network must reach to pass
-    
     keepPercent is the keep rate for dropout on the last layer
     
     silent=True prints out significantly less information
@@ -235,13 +89,12 @@ def artificial_Net(inputX, inputY, nSamples=0, initVector=np.array([0,0]),
     batchSize is the size of each batch fed for an epoch
     '''
     #ensure correct data container
-    inputX = np.array(inputX)
-    inputY = np.array(inputY)
     initVector = np.array(initVector)
     
     rc = error_Check(inputX, inputY, nSamples, initVector, minCost, alpha, 
-                     training_epochs, strictness, silent, overlap, objFunc,
+                     training_epochs, silent, overlap, objFunc,
                      keepPercent, batchSize, batching)
+    
     if rc == -1:
         #error occured
         return -1
@@ -253,13 +106,15 @@ def artificial_Net(inputX, inputY, nSamples=0, initVector=np.array([0,0]),
             nSamples = total
             
         else:
-            nSamples = int(0.9*inputX.shape[0])
+            testSplit = 0.9
+            nSamples = int(testSplit*inputX.shape[0])
         
-            if (int(0.9*total) + int(0.1*total)) < total:
-                # if the sum of 70% of the data and 30% of the data is 1 less 
+            if (int(testSplit*total) + int(0.1*total)) < total:
+                # if the sum of 90% of the data and 10% of the data is 1 less 
                 # than the actual total (floating point error), adjust by 1
                 nSamples += 1
-
+    
+    print("nSamples is", nSamples)
     trainX, trainY, testX, testY = generate_Random_Samples(
         nSamples, inputX, inputY, overlap)
     
@@ -311,10 +166,12 @@ def main():
                                                      silent=True, alpha=0.0005,
                                                      batchSize=100)  
     
+
     '''
     Ionosphere contains 34 features, all continuous.  get_Samples will 
     normalize the continuous data before returning it
     '''
+
     dataFileName = 'Ionosphere.csv'
     inputX, inputY = get_Samples(dataFileName, categorical=False)
     IN, LABEL_IN, OUTPUT, keep_rate = artificial_Net(inputX, inputY, 
@@ -324,12 +181,14 @@ def main():
                                                      batchSize=100)
     
     
+
     '''
     Balance data contains categories and 4 features
     
     Class, Left Weight(1 to 5), Left Weight Distance(1 to 5), 
     Right Weight(1 to 5), Right Weight Distance (1 to 5)
     '''
+
     dataFileName = 'Balance_data.csv'  
     inputX, inputY = get_Samples(dataFileName, categorical=True)
     
@@ -339,10 +198,10 @@ def main():
                                                      silent=True, batchSize=200)
     
     #mnist example
+
     print("\n")
     inputX, inputY = MNIST_Data_Get()
     artificial_Net(inputX, inputY, initVector = np.array([0, 784, 0]), 
                    training_epochs=20000, batchSize=100)
-
 
 main()

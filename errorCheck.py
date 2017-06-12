@@ -1,5 +1,5 @@
 def error_Check(inputX, inputY, nSamples, initVector, minCost, alpha, 
-                training_epochs, strictness, silent, overlap, objFunc,
+                training_epochs, silent, overlap, objFunc,
                 keepPercent, batchSize, batching):
     
     acceptedObjFuncs = ["", "QUAD"]
@@ -28,20 +28,12 @@ def error_Check(inputX, inputY, nSamples, initVector, minCost, alpha,
         print("training_epochs must be an integer")
         return -1
     
-    if type(strictness) not in [int, float]:
-        print("strictness must be float or integer")
-        return -1
-    
     if type(silent) != bool:
         print("silent must be either True or False")
         return -1
     
     if type(overlap) != bool:
         print("silent must be either True or False")
-        return -1
-    
-    if strictness > 100:
-        print("Not possible to receive greater than 100% on tests")
         return -1
     
     if type(keepPercent) not in [float, int]:
